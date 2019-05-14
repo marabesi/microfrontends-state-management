@@ -13,35 +13,47 @@ class ViewC extends LitElement {
       --wired-icon-bg-color: red;
       --wired-item-selected-bg: green;
     }`;
-  } 
+  }
+
+  static get properties() {
+    return {
+      spinning: { type: Boolean },
+    }
+  }
 
   render(){
     return html`
       <!-- template content -->
       <wired-card elevation="5">
         <h4>Micro Frontend 3</h4>
-        <wired-checkbox id="cbox">Off all</wired-checkbox>
+        <wired-checkbox id="cbox" @change="${(e) => {
+          PubSub.publish('broadcast-channel', e.detail.checked);
+          this.spinning = false;
+        }}">Off all</wired-checkbox>
         <section>
-            <wired-spinner id="sp"></wired-spinner>
+            <wired-spinner id="sp" ?spinning="${this.spinning}"></wired-spinner>
         </section>
       </wired-card>
     `;
   }
 
-  firstUpdated(changedProperties) {
-    const checkbox = this.shadowRoot.getElementById('cbox');
-    const sp = this.shadowRoot.getElementById('sp');
+  constructor() {
+    super();
+    this.spinning = false;
+  }
 
-    checkbox.addEventListener('change', () => {
-        //Publish to channel
-        PubSub.publish('broadcast-channel',checkbox.checked);
-        sp.spinning = false;
-    });
-
+  connectedCallback() {
+    super.connectedCallback();
     //Subscribe to channel
     PubSub.subscribe('spinner-channel').on((value) => {
-        sp.spinning = !sp.spinning;  
+        this.spinning = !this.spinning;
     });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    //Subscribe to channel
+    PubSub.unsubscribe('spinner-channel');
   }
 
 }

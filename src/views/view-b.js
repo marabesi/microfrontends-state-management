@@ -1,5 +1,6 @@
 // Import the LitElement base class and html helper function
 import { LitElement, html, css } from 'lit-element';
+import 'wired-card';
 import 'wired-slider';
 import 'wired-progress';
 import 'wired-toggle';
@@ -12,51 +13,65 @@ class ViewB extends LitElement {
     :host {
       --wired-toggle-on-color: yellow;
     }`;
-  } 
+  }
+
+  static get properties() {
+    return {
+      value: { type: String },
+      sliderDisabled: {
+        type: Boolean,
+        attribute: 'slider-disabled'
+      },
+      toggleDisabled: {
+        type: Boolean,
+        attribute: 'toggle-disabled'
+      },
+    }
+  }
 
   render(){
     return html`
       <!-- template content -->
-      <wired-card id="card2" elevation="4">
+      <wired-card elevation="4">
         <h4>Micro Frontend 2</h4>
         <section>
-          <wired-progress id="progress" percentage></wired-progress>
+          <wired-progress percentage .value="${this.value}"></wired-progress>
         </section>
         <section>
-          <wired-slider id="slider"></wired-slider>
-          <wired-toggle id="toggle"></wired-toggle>
+          <wired-slider ?disabled="${this.sliderDisabled}" @change="${(e) => this.value = e.detail.value}"></wired-slider>
+          <wired-toggle ?disabled="${this.toggleDisabled}" @change="${(e) => PubSub.publish('favorite-channel', e.detail.checked)}"></wired-toggle>
         </section>
       </wired-card>
     `;
   }
 
-  firstUpdated(changedProperties) {
-    const slider = this.shadowRoot.getElementById('slider');
-    const prog = this.shadowRoot.getElementById('progress');
-    const toggle = this.shadowRoot.getElementById('toggle');
-    
-    slider.addEventListener('change', () => {
-      prog.value =  slider.value;
-    });
+  constructor() {
+    super();
+    this.value = 0;
+    this.sliderDisabled = false;
+    this.toggleDisabled = false;
+  }
 
-    toggle.addEventListener('change', () => {
-      //Publish to channel
-      PubSub.publish('favorite-channel',toggle.checked);
-    });
-
+  connectedCallback() {
+    super.connectedCallback();
     //Subscribe to channel
     PubSub.subscribe('value-channel').on((value) => {
-      prog.value = value ; 
+      this.value = value ;
     });
 
     //Subscribe to channel
     PubSub.subscribe('broadcast-channel').on((value) => {
-      slider.disabled = value; 
-      toggle.disabled = value;
+      this.sliderDisabled = value;
+      this.toggleDisabled = value;
     });
-
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    //Subscribe to channel
+    PubSub.unsubscribe('value-channel');
+    PubSub.unsubscribe('broadcast-channel');
+  }
 
 }
 // Register the new element with the browser.
