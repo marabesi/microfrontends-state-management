@@ -43,7 +43,7 @@ class ViewB extends LitElement {
         </section>
       </wired-card>
     `;
-  }
+	}
 
   constructor() {
     super();

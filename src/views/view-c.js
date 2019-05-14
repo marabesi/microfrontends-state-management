@@ -48,6 +48,12 @@ class ViewC extends LitElement {
     PubSub.subscribe('spinner-channel').on((value) => {
         this.spinning = !this.spinning;
     });
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+    //Subscribe to channel
+    PubSub.unsubscribe('spinner-channel');
   }
 
   disconnectedCallback() {
